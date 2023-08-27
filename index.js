@@ -51,6 +51,7 @@ function adapter(uri, opts) {
   var sub = opts.subClient;
   var prefix = opts.key || 'socket.io';
   var requestsTimeout = opts.requestsTimeout || 5000;
+  var proxyNspName = opts.proxyNspName;
 
   // init clients if needed
   function createClient() {
@@ -81,6 +82,10 @@ function adapter(uri, opts) {
     this.uid = uid;
     this.prefix = prefix;
     this.requestsTimeout = requestsTimeout;
+    if(proxyNspName) {
+      this.proxyNspName =  proxyNspName;
+      this.proxyChannel = prefix + '#' + proxyNspName + '#';
+    }
 
     this.channel = prefix + '#' + nsp.name + '#';
     this.requestChannel = prefix + '-request#' + this.nsp.name + '#';
@@ -136,7 +141,7 @@ function adapter(uri, opts) {
   Redis.prototype.onmessage = function(pattern, channel, msg){
     channel = channel.toString();
 
-    if (!this.channelMatches(channel, this.channel)) {
+    if (!this.channelMatches(channel, this.channel) && !this.channelMatches(channel, this.proxyChannel)) {
       return debug('ignore different channel');
     }
 
@@ -156,7 +161,7 @@ function adapter(uri, opts) {
       packet.nsp = '/';
     }
 
-    if (!packet || packet.nsp != this.nsp.name) {
+    if (!packet || (packet.nsp !== this.nsp.name && packet.nsp !== this.proxyNspName)) {
       return debug('ignore different namespace');
     }
 
