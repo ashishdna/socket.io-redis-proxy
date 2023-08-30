@@ -142,12 +142,13 @@ function adapter(uri, opts) {
     channel = channel.toString();
 
     if (!this.channelMatches(channel, this.channel) && !this.channelMatches(channel, this.proxyChannel)) {
-      return debug('ignore different channel');
+      return debug('channel:%s ignore different channel in message:%s', this.channel, channel);
     }
 
     var room = channel.slice(this.channel.length, -1);
-    if (room !== '' && !this.rooms.hasOwnProperty(room)) {
-      return debug('ignore unknown room %s', room);
+    var pRoom = channel.slice(this.proxyChannel.length, -1);
+    if ((room !== '' && !this.rooms.hasOwnProperty(room)) && (pRoom !== '' && !this.rooms.hasOwnProperty(pRoom))) {
+      return debug('channel:%s ignore unknown room %s and proxy room:%s', this.channel, room, pRoom);
     }
 
     var args = msgpack.decode(msg);
